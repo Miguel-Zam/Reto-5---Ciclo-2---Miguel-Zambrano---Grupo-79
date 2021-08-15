@@ -1,0 +1,308 @@
+//Librerías
+import java.util.ArrayList;
+import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+
+//Vista
+//Clase de la vista y su respectiva implementación
+
+public class VistaRequerimientosReto4_79 {
+    
+    public static final ControladorRequerimientosReto4_79 controlador = new ControladorRequerimientosReto4_79();
+
+
+    public static void consulta1(){
+        System.out.println("-----Consulta 1-------"); 
+        try{
+
+            ArrayList<Consulta1VO_79> lista = controlador.realizarConsulta1();
+
+            //Encabezado del resultado
+            System.out.println("id_proyecto, Fecha_Inicio , banco_vinculado , serial");
+            
+            //Cada VO cargado, mostrarlo en la vista
+            for (Consulta1VO_79 proyecto : lista) {
+                System.out.printf("%d %s %s %s %n", proyecto.getId_proyecto(), proyecto.getFecha_inicio(), proyecto.getBanco_vinculado(), proyecto.getSerial());
+            }
+            
+        }catch(SQLException e){
+            System.err.println("Ha ocurrido un error!"+e.getMessage());
+        }      
+    }
+
+    public static void consulta2(){
+        System.out.println("-----Consulta 2-------"); 
+        try{
+
+            ArrayList<Consulta2VO_79> lista = controlador.realizarConsulta2();
+
+            //Encabezado del resultado
+            System.out.println("nombre, salario, deducible, apellidos");
+            
+            //Cada VO cargado, mostrarlo en la vista
+            for (Consulta2VO_79 lider : lista) {
+                System.out.printf("%s %d %s %s %n", lider.getNombre(), lider.getSalario(), lider.getDeducible()+"0000", lider.getApellidos());
+            }
+
+        }catch(SQLException e){
+            System.err.println("Ha ocurrido un error!"+e.getMessage());
+        }      
+    }
+
+    public static void consulta3(){
+        System.out.println("-----Consulta 3-------"); 
+        try{
+
+            ArrayList<Consulta3VO_79> lista = controlador.realizarConsulta3();
+
+            //Encabezado del resultado
+            System.out.println("id_proyecto, nom_ape");
+
+            //Cada VO cargado, mostrarlo en la vista
+            for (Consulta3VO_79 nombreApellido : lista) {
+                System.out.printf("%d %s %n", nombreApellido.getId_proyecto(), nombreApellido.getNom_ape());
+            }
+        }catch(SQLException e){
+            System.err.println("Ha ocurrido un error!"+e.getMessage());
+        }      
+    }
+}
+
+//Controlador
+//Clase del controlador y su respectiva implementación
+
+public class ControladorRequerimientosReto4_79 {  
+    private final Consulta1_79Dao consulta1_79Dao;
+    private final Consulta2_79Dao consulta2_79Dao;
+    private final Consulta3_79Dao consulta3_79Dao;
+
+    public ControladorRequerimientosReto4_79(){
+        this.consulta1_79Dao=new Consulta1_79Dao();
+        this.consulta2_79Dao=new Consulta2_79Dao();
+        this.consulta3_79Dao=new Consulta3_79Dao();
+    }
+
+    public ArrayList<Consulta1VO_79> realizarConsulta1() throws SQLException {
+        return consulta1_79Dao.consulta1DAO();
+    }
+
+    public ArrayList<Consulta2VO_79> realizarConsulta2() throws SQLException {
+        return consulta2_79Dao.consulta2DAO();
+    }
+
+    public ArrayList<Consulta3VO_79> realizarConsulta3() throws SQLException {
+        return consulta3_79Dao.consulta3DAO();
+    }
+}
+
+//DAO's
+//Clase de los DAOs y su respectiva implementación, son 3 DAOs, uno por cada consulta.
+
+public class Consulta1_79Dao{
+    public ArrayList<Consulta1VO_79> consulta1DAO() throws SQLException{
+        ArrayList<Consulta1VO_79> response = new ArrayList<Consulta1VO_79>();
+        try (Connection connection = JDBCUtilities.getConnection();
+                PreparedStatement statement = connection.prepareStatement("SELECT p.ID_Proyecto , p.Fecha_Inicio, p.Banco_Vinculado, p.Serial FROM Proyecto p WHERE p.ID_Proyecto>4 and p.ID_Proyecto <12");
+                ResultSet rset = statement.executeQuery()) {
+
+            while (rset.next()) {
+                Consulta1VO_79 proyectos = new Consulta1VO_79();
+
+                proyectos.setId_proyecto(rset.getInt("ID_Proyecto"));
+                proyectos.setFecha_inicio(rset.getString("Fecha_Inicio"));
+                proyectos.setBanco_vinculado(rset.getString("Banco_Vinculado"));
+                proyectos.setSerial(rset.getString("Serial"));
+
+                response.add(proyectos);
+            }
+            rset.close();
+            statement.close();
+        }
+        return response;
+    }  
+}
+
+public class Consulta2_79Dao {
+    public ArrayList<Consulta2VO_79> consulta2DAO() throws SQLException {
+        ArrayList<Consulta2VO_79> response = new ArrayList<Consulta2VO_79>();
+        try (Connection connection = JDBCUtilities.getConnection();
+                PreparedStatement statement = connection.prepareStatement("SELECT l.Nombre, l.Salario, l.Salario*0.08 as deducible, l.Primer_Apellido ||'-'|| l.Segundo_apellido as apellidos FROM Lider l WHERE l.Salario>=500000 and l.Salario<=650000");
+                ResultSet rset = statement.executeQuery()) {
+
+            while (rset.next()) {
+                Consulta2VO_79 lideres = new Consulta2VO_79();
+
+                lideres.setNombre(rset.getString("Nombre"));
+                lideres.setSalario(rset.getInt("Salario"));
+                lideres.setDeducible(rset.getString("deducible"));
+                lideres.setApellidos(rset.getString("apellidos"));
+
+                response.add(lideres);
+            }
+            rset.close();
+            statement.close();
+        }
+        return response;
+    }  
+}
+
+public class Consulta3_79Dao {
+    public ArrayList<Consulta3VO_79> consulta3DAO() throws SQLException {
+        ArrayList<Consulta3VO_79> response = new ArrayList<Consulta3VO_79>();
+        try (Connection connection = JDBCUtilities.getConnection();
+                PreparedStatement statement = connection.prepareStatement("SELECT p.ID_Proyecto, l.Nombre ||' '|| l.Primer_Apellido as nom_ape FROM Proyecto p JOIN Lider l ON l.ID_Lider = p.ID_Lider WHERE p.Banco_Vinculado = 'Colpatria'");
+                ResultSet rset = statement.executeQuery()) {
+
+            while (rset.next()) {
+                Consulta3VO_79 nombreApellidos = new Consulta3VO_79();
+
+                nombreApellidos.setId_proyecto(rset.getInt("ID_Proyecto"));
+                nombreApellidos.setNom_ape(rset.getString("nom_ape"));
+
+                response.add(nombreApellidos);
+            }
+            rset.close();
+            statement.close();
+        }
+        return response;
+    }  
+}
+
+//VO's
+//Clase de los VOs y su respectiva implementación, son 3 VOs, uno por cada consulta.
+
+public class Consulta1VO_79{
+    private Integer id_proyecto;
+    private String fecha_inicio; 
+    private String banco_vinculado;
+    private String serial;
+
+    public Consulta1VO_79(){
+        
+    }
+
+    public Consulta1VO_79(Integer id_proyecto){
+        this.id_proyecto=id_proyecto;
+    }
+
+    public void setId_proyecto(Integer id_proyecto) {
+        this.id_proyecto = id_proyecto;
+    }
+
+    public Integer getId_proyecto() {
+        return id_proyecto;
+    }
+
+    public void setFecha_inicio(String fecha_inicio) {
+        this.fecha_inicio = fecha_inicio;
+    }
+
+    public String getFecha_inicio() {
+        return fecha_inicio;
+    }
+
+    public void setBanco_vinculado(String banco_vinculado) {
+        this.banco_vinculado = banco_vinculado;
+    }
+
+    public String getBanco_vinculado() {
+        return banco_vinculado;
+    }
+
+    public void setSerial(String serial) {
+        this.serial = serial;
+    }
+
+    public String getSerial() {
+        return serial;
+    }
+}
+
+public class Consulta2VO_79 {
+    private String nombre;
+    private Integer salario;
+    private String deducible;
+    private String apellidos;
+
+    public Consulta2VO_79(){
+        
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setSalario(Integer salario) {
+        this.salario = salario;
+    }
+
+    public Integer getSalario() {
+        return salario;
+    }
+
+    public void setDeducible(String deducible) {
+        this.deducible = deducible;
+    }
+
+    public String getDeducible() {
+        return deducible;
+    }
+
+    public void setApellidos(String apellidos) {
+        this.apellidos = apellidos;
+    }
+
+    public String getApellidos() {
+        return apellidos;
+    }
+}
+
+public class Consulta3VO_79 {
+    private Integer id_proyecto;
+    private String nom_ape;
+
+    public Consulta3VO_79(){
+        
+    }
+
+    public void setId_proyecto(Integer id_proyecto) {
+        this.id_proyecto = id_proyecto;
+    }
+
+    public Integer getId_proyecto() {
+        return id_proyecto;
+    }
+
+    public void setNom_ape(String nom_ape) {
+        this.nom_ape = nom_ape;
+    }
+
+    public String getNom_ape() {
+        return nom_ape;
+    }
+}
+
+//JDBC utilities
+public class JDBCUtilities {
+    private static final String UBICACION_BD = "ProyectosConstruccion.db";
+    public static Connection getConnection() throws SQLException {
+    String url = "jdbc:sqlite:" + UBICACION_BD;
+    return DriverManager.getConnection(url);
+    }
+    public static boolean estaVacia(){
+    File archivo = new File(JDBCUtilities.UBICACION_BD);
+    // //Salida de diagnóstixo
+    // System.out.println("UBICACION -> "+ JDBCUtilities.UBICACION_BD);
+    // System.out.println("Longitud -> "+ archivo.length());
+    return archivo.length() == 0;
+    }
+}
